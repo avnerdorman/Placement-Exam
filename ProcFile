@@ -1,1 +1,0 @@
-web: gunicorn placement_exam.wsgi
