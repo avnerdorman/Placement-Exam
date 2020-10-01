@@ -1,0 +1,778 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class = "text-center" style = "padding: 10px"> Sunderman Conservatory </h1>
+<h1 class = "text-center"> Music Theory Placement Exam</h1>
+<p class = "text-right" style = "padding: 10px">Time Started: <span id="datetime"></span></p>
+<div class="container-fluid">
+    <form id="friend-form">
+        <div class="row">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group col-4">
+                <label class="col-12">{{ field.label }}</label>
+                {{ field }}
+            </div>
+            {% endfor %}
+            
+            <div class = "col text-center">
+                <input type="submit" class="btn btn-primary" value="Start Exam" />
+            </div>
+
+        </div>
+
+
+<hr />
+<!-- Exam holds the current question shown to the students -->
+<div id = "exam"> 
+    <div class="text-center" id = "question_container">
+        <h3 id = "question_title">This will hold the question title</h3>
+        <div id = "question_prompt"> This will hold the question prompt</div>
+        <div id = "question_number"></div>
+        <div class="d-flex justify-content-center" id = "current_question"> This will hold the current question</div>
+  
+        <div class="container" id="button-bar">
+            <div class="row">
+                <div class="col text-center">
+                    <button type="button" class="accidental" id="#">&#9839;</button>
+                    <button type="button" class="accidental" id="">&#9838;</button>
+                    <button type="button" class="accidental" id="b">&#9837;</button>
+                </div>
+            </div>
+        </div>  
+        
+        <button type="button" class="btn btn-primary" id="previous">Previous</button>
+        <button type="button" class="btn btn-primary" id="next">Next</button>
+        <p><select id="question-number"></select></p>
+        <button type="button" class="btn btn-primary" id="save-work" style="display:none">save your work</button>
+        <button type="button" class="btn btn-primary" id="submit-exam">Submit your exam</button>
+  
+    </div>
+</div>
+<form>
+</div>
+<!-- This shows database entries - will be deleted eventually -->
+<!-- <div class="container-fluid">
+    <table class="table table-striped table-sm" id="my_friends">
+        <thead>
+            <tr>
+                <th>Slate ID</th>
+                <th>First name</th>
+                <th>Last name</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for friend in friends %}
+        <tr>
+            <td>{{friend.slate_id}}</td>
+            <td>{{friend.first_name}}</td>
+            <td>{{friend.last_name}}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table> -->
+
+</div>
+{% endblock content %}
+
+
+{% block javascript %}
+<script>
+
+/* Declare some global variables - maybe wrap in a function eventually*/
+VF = Vex.Flow; /* Vexflow */
+
+/* all possible pitches and accidentals - note, no double accidentals for now */ 
+
+const all_pitches = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+const all_accidentals = ['b', '#', '']
+        /* Delete at some point */
+        // all_labels = document.getElementsByClassName('col-12')
+        // for (i in all_labels) {
+        //     console.log(i);
+        // }
+
+// get the slate id provided in the url
+        let params = new URLSearchParams(location.search);
+        let user_id = params.get('slateid');
+        // console.log(user_id);
+        slate_id_input = document.getElementById("id_slate_id")
+        slate_id_input.value = user_id; 
+        slate_id_input.readOnly = true; 
+
+        let full_exam = {
+            first_name:"",
+            last_name:"",
+            slate_id:"", /* unique id in the database */
+            start_date_time:"",
+            end_date_time:"",
+            exam: {},
+            grade:"",
+            grade_treble:"",
+            grade_bass:"",
+            grade_keyboard:"",
+            grade_rhythm:"",
+            grade_key_signatures:"",
+        }
+        slate_id = user_id;
+
+    $(document).ready(function () {
+
+        /* GET AJAX request
+        This checks whether this slate_id already has a user in the database
+        If it does, it will load it into the response object */
+
+            $.ajax({
+                type: 'GET',
+                url: "{% url 'validate_slate_id' %}",
+                data: "&slate_id=" + slate_id,
+                success: function (response) {
+                    // if slate_id already in the system
+                    if(!response["valid"]){
+                        // alert("This slate_id has already been used");
+                        // response now holds the information relating to this user in the database
+                        // console.log(response[0].fields);
+                        full_exam.first_name = document.getElementById("id_first_name")
+                        full_exam.first_name.value = response[0].fields.first_name; 
+                        full_exam.first_name.readOnly = true;                      
+                        full_exam.last_name = document.getElementById("id_last_name")
+                        full_exam.last_name.value = response[0].fields.last_name; 
+                        full_exam.last_name.readOnly = true;        
+                        // console.log(response[0].fields.first_name); 
+                        // console.log(response[0].fields.last_name);
+                        exam = response[0].fields.exam;
+                        console.log(exam)
+                        initializeExamVisuals(exam);
+                        startExam(exam);
+                        // Here we will need to load the exam into full_exam
+                        // and run startTest with the loaded exam 
+                    }
+                },
+                error: function (response) {
+                    alert("GET didn't work")
+                }
+            })
+
+
+
+
+        /*
+            On submiting the form, send the POST ajax
+            request to server and after successfull submission
+            display the object.
+        */
+
+
+            $("#friend-form").submit(function (e) {
+                var dt = new Date(); /* Date time of start */
+                // var close time - Date + 40 minutes 
+                document.getElementById("datetime").innerHTML = dt.toLocaleString();
+                dtString = dt.toString();
+                full_exam.start_date_time = dt;
+                // console.log(typeof dt);
+                let exam = initializeExam();
+                let examString = JSON.stringify(exam);
+                // console.log(examString);
+                e.preventDefault();
+                // serialize the data for sending the form data.
+                var serializedData = $(this).serialize() + "&exam=" + examString;
+                var json = JSON.stringify(this);
+                // console.log(serializedData);
+                // make POST ajax call
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'post_friend' %}",
+                    data: serializedData,
+                    success: function (response) {
+                        window.location.reload();
+                    },
+                    error: function (response) {
+                        // alert the error if any error occured
+                        alert(response["responseJSON"]["error"]);
+                    }
+                })
+            });
+
+        /*
+            On focus out on input slate id,
+            call AJAX get request to check if the slate id
+            already exists or not.
+            */
+            $("#slate_id").focusout(function (e) {
+                e.preventDefault();
+                // get the slate id
+                var slate_id = $(this).val();
+                // console.log(slate_id);
+                // GET AJAX request
+                $.ajax({
+                    type: 'GET',
+                    url: "{% url 'validate_slate_id' %}",
+                    data: {"#slate_id": slate_id},
+                    success: function (response) {
+                        // if not valid user, alert the user
+                        if(!response["valid"]){
+                            alert("This slate_id has already been used");
+                            var slateID = $("#slate_id");
+                            slateID.val("")
+                            slateID.focus()
+                        }
+                    },
+                    error: function (response) {
+                        // console.log(response)
+                    }
+                })
+            });
+        
+            function initializeExam(
+                        ID_Treble = 10, 
+                        ID_Bass = 10, 
+                        Write_Treble = 10, 
+                        Write_Bass = 10, 
+                        ID_Keyboard = 10, 
+                        Insert_Barlines = 3, 
+                        Rebeam_Music = 2,
+                        ID_Keys = 10, 
+                        Write_Keys = 6) {
+                let exam = [1];   /* The array exam holds all the questions and answers of the exam */
+                total_number_of_questions = 0; /* holds the number of actual questions already initialized */
+
+                /* the following loops create the questions */
+                let question_number = 1;
+
+                // function addOptionSelector (question_number){
+                // let newOption = new Option('Option Text','Option Value');
+                // document.getElementById("question-number").innerHTML += "<option value =" + question_number.toString() + "> Question " + question_number.toString() + "</option>";
+                // }
+
+                for (i = 0; i < ID_Treble; i++) {
+                    exam.push(createPitch(octaves = [4,5], question_type = "ID_Treble", question_number));
+                    addOptionSelector(question_number);
+                    question_number++;
+                    total_number_of_questions ++;
+                }
+                for (i = 0; i < ID_Bass; i++) {
+                    exam.push(createPitch(octaves = [2,3], question_type = "ID_Bass", question_number));
+                    addOptionSelector(question_number);
+                    question_number++;
+                    total_number_of_questions ++;
+                }
+
+                for (i = 0; i < Write_Treble; i++) {
+                    exam.push(createPitch(octaves = [4,5], question_type = "Write_Treble", question_number));
+                    addOptionSelector(question_number);
+                    question_number++;
+                    total_number_of_questions ++;
+                }
+
+                for (i = 0; i < Write_Bass; i++) {
+                    exam.push(createPitch(octaves = [2,3], question_type = "Write_Bass", question_number));
+                    addOptionSelector(question_number);
+                    question_number++;
+                    total_number_of_questions ++;
+                }
+
+                for (i = 0; i < Insert_Barlines; i++) {
+                    exam.push(rhythm_question(i));
+                    console.log(rhythm_question(i));
+                    addOptionSelector(question_number);
+                    question_number ++;
+                    total_number_of_questions ++;
+                }
+
+                function createPitch(octaves = [4,5], question_type = "", question_number) {
+                let pitch = all_pitches[Math.floor(Math.random() * all_pitches.length)];
+                let octave = octaves[Math.floor(Math.random() * octaves.length)];
+                let accidental = all_accidentals[Math.floor(Math.random() * all_accidentals.length)];
+                let question = {
+                    question_type: question_type,
+                    given_pitch: pitch,
+                    given_octave: octave,
+                    given_accidental: accidental,
+                    answer_pitch: "",
+                    answer_accidental: "",
+                    answer_octave: "",
+                    question_number: question_number,
+                    raw_answer: "",
+                    points_worth: 1,
+                    points_earned: 0,
+                }
+                return question;
+            }
+                function rhythm_question(id) {
+                    rhythms_array = [
+                    "X:1\nK: clef=perc\nL:1/8\nM:4/4\nBB-BB- B3 B |B>B B>B B3 B/B/| BB/B/ B<B BB/B/ B<B  |B2 BB B2 B2|",
+                    "X:1\nK: clef=perc\nL:1/8\nM:3/4\nB>B B2 B2| B4 B2| B>B B2 B>B |B3 B BB |B6|",
+                    "X:1\nK: clef=perc\nL:1/16\nM:6/8\nB4 BB B4 BB |BBB2B2 B3BBB |B4BB B2B2B2| B3BBB B4B2| B6 z6|",
+                    ]
+                    let question = {
+                    question_type: 'Insert_Barlines',
+                    given_rhythm: rhythms_array[id],
+                    answer_rhythm: '',
+                    points_worth: 5,
+                    }   
+                    return question;
+                }
+
+
+                return exam;
+            };
+
+            function startExam(exam) {                
+                /* Always start from question 1 */
+                total_number_of_questions = Object.keys(exam).length;
+                question_number = 1;
+                document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
+                
+                // console.log(exam[question_number]);
+                
+                exam[question_number] = show_question (exam[question_number]);
+
+                /* Listener for PREVIOUS question */
+
+                document.getElementById("previous").addEventListener("click", function(){
+                
+                    // console.log(exam[question_number]);
+                    if (document.contains(document.getElementById("reset"))) {
+                    document.getElementById("reset").remove();}
+                
+                    let current_input = document.getElementById("answer1").value;
+                    if (current_input) {
+                    exam[question_number].raw_answer = current_input;
+                    answer = current_input.toLowerCase();
+                    exam[question_number].answer_pitch = answer.slice(0,1) || "none";
+                    exam[question_number].answer_accidental = answer.slice (1) || "none";
+                    };
+                    if (question_number > 1) { question_number -= 1};
+                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
+                    var pagebutton= document.getElementById("save-work");
+                    pagebutton.click();
+                    exam[question_number] = show_question (exam[question_number]);
+                    document.getElementById("question-number").value = question_number.toString();
+                });
+
+                /*  Listener for NEXT question */
+
+                document.getElementById("next").addEventListener("click", function(){
+                    // console.log(exam[question_number]);
+                    if (document.contains(document.getElementById("reset"))) {
+                    document.getElementById("reset").remove();}
+                   let current_input = document.getElementById("answer1").value;
+                    if (current_input) {
+                    exam[question_number].raw_answer = current_input;
+                    answer = current_input.toLowerCase();
+                    exam[question_number].answer_pitch = answer.slice(0,1) || "";
+                    exam[question_number].answer_accidental = answer.slice (1) || "";
+                    };
+                    if (question_number < total_number_of_questions - 1) { question_number += 1};
+                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
+                    var pagebutton= document.getElementById("save-work");
+                    pagebutton.click();
+                    exam[question_number] = show_question (exam[question_number]);
+                    document.getElementById("question-number").value = question_number.toString();
+
+                });
+
+                document.getElementById("question-number").addEventListener('change', (event) => {
+                    // console.log(typeof(event.target.value));
+                    if (document.contains(document.getElementById("reset"))) {
+                    document.getElementById("reset").remove();}
+                    let current_input = document.getElementById("answer1").value;
+                    if (current_input) {
+                    exam[question_number].raw_answer = current_input;
+                    answer = current_input.toLowerCase();
+                    exam[question_number].answer_pitch = answer.slice(0,1) || "";
+                    exam[question_number].answer_accidental = answer.slice (1) || "";
+                    };
+                    question_number = parseInt(event.target.value);
+                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
+                    var pagebutton= document.getElementById("save-work");
+                    pagebutton.click();
+                    exam[question_number] = show_question (exam[question_number]);
+                });
+
+            // show_question (exam[question_number]);
+                $("#save-work").click (function(e) {
+                    e.preventDefault();
+                    let examString = JSON.stringify(exam);
+                    let params = new URLSearchParams(location.search);
+                    let user_id = params.get('slateid');
+                    document.getElementById("id_slate_id").innerHTML = user_id;
+                    var serializedData = "&slate_id=" + user_id + "&exam=" + examString;
+                    $.ajax({
+                        method: 'POST',
+                        url: "{% url 'update_friend' %}",
+                        data: "&slate_id=" + user_id + "&exam=" + examString, 
+                        success: function (response) {
+                        },
+                    error: function (response) {
+                        // alert the error if any error occured
+                        alert("error");
+                    }
+                })
+            });
+            // console.log (ID_Treble, ID_Bass, Write_Treble, Write_Bass, ID_Keyboard, Insert_Barlines, Rebeam_Music, ID_Keys, Write_Keys);
+    };
+
+    function initializeExamVisuals(exam){
+        total_number_of_questions = Object.keys(exam).length;
+        for (question_number = 1; question_number < total_number_of_questions; question_number++) {
+            addOptionSelector(question_number);
+        }
+    }
+    /* */
+    function addOptionSelector (question_number){
+        let newOption = new Option('Option Text','Option Value');
+        document.getElementById("question-number").innerHTML += "<option value =" + question_number.toString() + "> Question " + question_number.toString() + "</option>";
+    }
+
+    function show_question(question) {
+        current_question_div = document.getElementById("current_question");
+        // console.log(question);
+        current_question_div.innerHTML = " ";
+        switch (question.question_type){
+            case "ID_Treble":
+            case "ID_Bass":
+            case "Write_Treble":
+            case "Write_Bass":
+                question = show_ID_Notes(question);
+                break;
+            case "Insert_Barlines":
+                show_Insert_Barlines(question);
+                };
+        // console.log(question);
+        return question;  
+    }
+
+
+
+    function createContainer (question){
+        serial = "1";
+        current_question_div = document.getElementById("current_question");
+
+        var container = document.createElement('container');
+        container.id = "container" + serial;
+        container.class = "col-xs-6";
+        document.getElementById(current_question_div.id).appendChild(container);  
+
+        var div = document.createElement('div');
+        div.id = 'boo' + serial;
+        div.className = "d-flex p-2";
+        document.getElementById(container.id).appendChild(div);  
+
+        var input = document.createElement('input');
+        input.id = 'answer' + serial;
+        input.autocomplete = "new-password"
+        if (question.question_type.slice(0,2) == "ID") {
+            document.getElementById("question_prompt").innerHTML = "Name the following note"
+            input.style.display = "block";
+
+        if (!question.raw_answer) {
+            input.placeholder = "Name the note"}
+        else {
+            input.placeholder = question.raw_answer
+            }  
+        }
+        /* check if it's a writing question */ 
+        else if (question.question_type.slice(0,2) == "Wr") {
+            input.placeholder = "Write the note <strong>" + (question.given_pitch.toUpperCase() + question.given_accidental + "</strong> on the staff");
+            input.style.display = "none";
+            document.getElementById("question_prompt").innerHTML = "Write the note <strong>" + (question.given_pitch.toUpperCase() + question.given_accidental) + "</strong> by clicking <strong>in</strong> the staff";
+        }
+        else if (question.question_type == "Insert_Barlines") {
+            document.getElementById("question_prompt").innerHTML = "Add barlines to the following rhythm. Click on a note to add a barline after it. Click again to remove the barline.";
+        }
+        input.type = "text";
+        input.size = "4";
+        document.getElementById(container.id).appendChild(input);  
+    }
+
+    function show_Insert_Barlines(question){
+        createContainer(question);
+        let question_number = document.getElementById("question_title").innerHTML.slice(-2);
+        var container = document.getElementById('boo1');
+        var div = document.createElement('div');
+        div.id = 'paper';
+        document.getElementById(container.id).appendChild(div);
+        
+        var button = document.createElement('button');
+        button.id = "reset";
+        button.className = "btn btn-primary";
+        button.innerHTML = "Click here to remove all barlines";
+        document.body.appendChild(button);
+        refresh = document.getElementById("reset")
+        
+        var rhythm_answer = document.createElement('div');
+        rhythm_answer.id = 'rhythm-answer';
+        document.body.appendChild(rhythm_answer);
+        question_number = parseInt(document.getElementById('question_title').innerText.replace(/[^0-9\.]/g, ''));
+
+        if (exam[question_number].answer_rhythm) {
+            original_music = question.answer_rhythm;
+        }
+        else {
+        original_music = question.given_rhythm.replace(/\|/g, '');
+        }
+        
+        // console.log(original_music);
+        var music = original_music;
+        // console.log(music.split(''))
+
+        /* listen for click. If there's no barline to the right of this note, add it
+        /  if there is a bar line, remove it 
+        /  then render the music again
+        */
+        initializeMusic (original_music);
+
+        function isLetter (ch)
+        {
+        return typeof ch === "string" && ch.length === 1
+            && (ch >= "a" && ch <= "z" || ch >= "A" && ch <= "Z");
+        }
+        function isNumber(ch)
+        {
+            num = parseInt(ch);
+            bool = (typeof num == "number");
+            return bool;
+        }
+
+        function addBarLine (music, position) {
+            music = music.slice(0, position + 1) + "|" + music.slice (position + 1, music.length);
+            return music;
+        }
+
+        function check (music, position) {
+            test = music.charAt(position + 1)
+            if (test == " "){
+                music = check (music, position + 1);
+            }
+            else if (isLetter(test) ) {music = addBarLine(music, position);}
+            else if (isNumber(test)) {
+                if (music.charAt(position + 3) == "|") {
+                    music = addBarLine(music, position + 3)
+                    }
+                else {
+                    music = addBarLine(music, position + 1)
+                    }
+            }
+
+            return music.replace('\|\|', '').replace('\| \|', ''); /* remove doubles */replace
+        }
+                
+        refresh.addEventListener("click", function (){
+            initializeMusic(original_music);
+            music = original_music;
+                });
+                
+
+        function clickListener(abcelem, tuneNumber, classes, analysis, drag, mouseEvent) {
+            charNum = abcelem.startChar;
+
+            music = check(music, charNum);
+            var visualObjs = ABCJS.renderAbc("paper", music, { add_classes: true }, { clickListener: clickListener });
+
+            /* save to array */
+            // console.log(exam[question_number]);
+            exam[question_number].answer_rhythm = music;
+            /* save to server */
+            var pagebutton= document.getElementById("save-work");
+            pagebutton.click();
+        };
+        
+        function initializeMusic(music){
+        var visualObjs = ABCJS.renderAbc("paper", music, { add_classes: true }, { clickListener: clickListener });
+        // console.log (visualObjs)
+        }
+    };
+
+    function show_ID_Notes(question) {
+        // Create a container for this note
+        createContainer(question);
+
+        // Create an SVG renderer and attach it to the DIV element named "boo".
+        var div = document.getElementById("boo1");
+        var renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
+
+        // Size our SVG:
+        renderer.resize(500, 150);
+
+        // And get a drawing context:
+        var context = renderer.getContext();
+
+        // Create a stave at position 10, 40 of width 400 on the canvas.
+        var stave = new VF.Stave(10, 40, 250);
+
+        // Add a clef and time signature.
+        clef_picker = 
+        {
+          "ID_Treble": "treble",
+          "ID_Bass": "bass",
+          "Write_Treble": "treble",
+          "Write_Bass": "bass"
+        }
+        clef = clef_picker[question.question_type]
+        stave.addClef(clef).addTimeSignature("4/4");
+
+        // Connect it to the rendering context and draw!
+        stave.setContext(context).draw();
+
+        /* get the button bar */ 
+        button_bar = document.getElementById("button-bar");
+
+        if ((question.question_type.slice(0,2)) == "ID") {
+            button_bar.style.display = "none";
+            // console.log(question);
+            if (!question.given_accidental) {
+                var notes = [
+                new VF.StaveNote({clef: clef, keys: [question.given_pitch + "/" + question.given_octave], duration: "w" }),];
+            }    
+            else {
+                var notes = [new VF.StaveNote({clef: clef, keys: [question.given_pitch + "/" + question.given_octave], duration: "w" }).addAccidental(0, new VF.Accidental(question.given_accidental)),];
+            }
+
+            var voice = new VF.Voice({num_beats: 2,  beat_value: 2});
+            voice.addTickables(notes);
+
+            // Format and justify the notes to 400 pixels.
+            var formatter = new VF.Formatter().joinVoices([voice]).format([voice], 400);
+
+            // Render voice
+            voice.draw(context, stave);
+        }
+        else if ((question.question_type.slice(0,2)) == "Wr" ){
+          button_bar.style.display = "block";
+          if (clef == "treble") {
+            var pitches = ['d/4', 'd/4', 'd/4', 'd/4', 'd/4', 'e/4', 'f/4', 'g/4', 'a/4', 'b/4', 'c/5', 'd/5', 'e/5', 'f/5', 'g/5', 'g/5', 'g/5', 'g/5', 'g/5', 'g/5']
+            } else if (clef == "bass") {
+            var pitches = ['f/2', 'f/2', 'f/2', 'f/2', 'f/2', 'g/2', 'a/2', 'b/2', 'c/3', 'd/3', 'e/3', 'f/3', 'g/3', 'a/3', 'b/3', 'b/3', 'b/3', 'b/3', 'b/3', 'b/3']
+          };
+          // console.log(pitches);
+        if (question.answer_pitch) {
+            console.log("I am here!");
+            if (!question.answer_accidental) {
+                var accidental1 = "";
+                var notes = [
+                new VF.StaveNote({clef: clef, keys: [question.answer_pitch + "/" + question.answer_octave], duration: "w" }),];
+            }    
+            else {
+                var notes = [
+                new VF.StaveNote({clef: clef, keys: [question.answer_pitch + "/" + question.answer_octave], 
+                duration: "w" }).addAccidental(0, new VF.Accidental(question.answer_accidental)),];
+                var accidental1 = question.answer_accidental
+            }
+            var voice = new VF.Voice({num_beats: 2,  beat_value: 2});
+            voice.addTickables(notes);
+
+            // Format and justify the notes to 400 pixels.
+            var formatter = new VF.Formatter().joinVoices([voice]).format([voice], 400);
+
+            // Render voice
+            voice.draw(context, stave);
+        
+        }
+        
+        else {var accidental1 = ""};
+
+        $('.accidental').on("click", function(evt) { 
+            var accidental1 = this.id;
+            if (question.answer_pitch) {
+                removeElements();
+                drawNotes (clef, question.answer_pitch + '/' + question.answer_octave, accidental1, context, stave);
+                // console.log(typeof (accidental1));
+                question.answer_accidental = accidental1;
+                // console.log(question);
+        }
+        });
+            /* find root svg element for this div */
+            svg = div.querySelector('svg');
+        
+            /* add event listener for mouse click */
+            svg.addEventListener('click',function(evt){
+            var rect = this.getBoundingClientRect(); /* get bounding rectangle */
+            var x = evt.clientX - rect.left; /*subtract left corner from global x */
+            var y = evt.clientY - rect.top; /*subtract right corner from global y */
+            // console.log("x: "+x+" y:"+y);
+            var rounded_y = Math.ceil(y/5)*5;
+
+            // Use loc.x and loc.y here
+
+            var index = 20 - Math.abs(rounded_y - 50)/5;
+            var pitch = pitches[index];
+
+            if (!accidental1) {
+                /* remove exisiting notes */
+                element = document.getElementById("boo1").getElementsByTagName("g");
+                // remove stave lines? how to redraw? Maybe just remove the ones added recently (ledger lines?) 
+                paths = document.getElementById("boo1").getElementsByTagName("path");
+                // console.log(paths)
+
+                for (index = element.length - 1; index >= 0; index--) {
+                    element[index].parentNode.removeChild(element[index]);
+                }                
+            
+                /* create new note */ 
+                var notes = [
+                    new VF.StaveNote({clef: clef, keys: [pitch], duration: "w" }),
+                    ];
+                    var voice = new VF.Voice({num_beats: 2,  beat_value: 2});
+                    voice.addTickables(notes);
+                // Format and justify the notes to 400 pixels.
+                    var formatter = new VF.Formatter().joinVoices([voice]).format([voice], 400);
+                // Render voice
+                voice.draw(context, stave);
+
+                }    
+            else {
+                var notes = [new VF.StaveNote({clef: clef, keys: [pitch], duration: "w" }).addAccidental(0, new VF.Accidental(accidental1)),];
+                }
+            question.answer_pitch = pitch.slice(0,1);
+            question.answer_accidental = accidental1;
+            question.answer_octave = pitch.slice(2,3);
+        },false);
+        
+        }
+        return question;
+
+};
+
+
+    function removeElements () {
+        /* remove exisiting notes */
+        element = document.getElementById("boo1").getElementsByTagName("g");
+        // remove stave lines? how to redraw? Maybe just remove the ones added recently (ledger lines?) 
+        paths = document.getElementById("boo1").getElementsByTagName("path");
+        // console.log(paths)
+
+        for (index = element.length - 1; index >= 0; index--) {
+            element[index].parentNode.removeChild(element[index]);
+        };                
+    };
+
+    function drawNotes(clef, pitch, accidental1, context, stave) {
+        /* create new note */ 
+        if (!accidental1) {
+        var notes = [
+            new VF.StaveNote({clef: clef, keys: [pitch], duration: "w" }),
+            ];
+        }
+        else {
+            var notes = [new VF.StaveNote({clef: clef, keys: [pitch], duration: "w" }).addAccidental(0, new VF.Accidental(accidental1)),];       
+        }
+            var voice = new VF.Voice({num_beats: 2,  beat_value: 2});
+            voice.addTickables(notes);
+        // Format and justify the notes to 400 pixels.
+            var formatter = new VF.Formatter().joinVoices([voice]).format([voice], 400);
+        // Render voice
+        voice.draw(context, stave);
+    };
+
+
+});
+
+
+
+
+
+
+</script>
+{% endblock javascript %}
