@@ -5,7 +5,8 @@
 <h1 class = "text-center" style = "padding: 10px"> Sunderman Conservatory </h1>
 <h1 class = "text-center"> Music Theory Placement Exam</h1>
 <p class = "text-right" style = "padding: 10px">Time Started: <span id="datetime"></span></p>
-<div class="container-fluid">
+<p class = "text-right" style="padding: 10px"> Time left: <span id="timeleft"></span></p>
+<div class="container">
     <form id="friend-form">
         <div class="row">
             {% csrf_token %}
@@ -17,7 +18,7 @@
             {% endfor %}
             
             <div class = "col text-center">
-                <input type="submit" class="btn btn-primary" value="Start Exam" />
+                <input id="start-exam" type="submit" class="btn btn-primary" value="Start Exam" />
             </div>
 
         </div>
@@ -25,7 +26,7 @@
 
 <hr />
 <!-- Exam holds the current question shown to the students -->
-<div id = "exam"> 
+<div id = "exam" style="display:none"> 
     <div class="text-center" id = "question_container">
         <h3 id = "question_title">This will hold the question title</h3>
         <div id = "question_prompt"> This will hold the question prompt</div>
@@ -38,6 +39,7 @@
                     <button type="button" class="accidental" id="#">&#9839;</button>
                     <button type="button" class="accidental" id="">&#9838;</button>
                     <button type="button" class="accidental" id="b">&#9837;</button>
+                    <!-- <div id="current_accidental"> </div> -->
                 </div>
             </div>
         </div>  
@@ -46,7 +48,7 @@
         <button type="button" class="btn btn-primary" id="next">Next</button>
         <p><select id="question-number"></select></p>
         <button type="button" class="btn btn-primary" id="save-work" style="display:none">save your work</button>
-        <button type="button" class="btn btn-primary" id="submit-exam">Submit your exam</button>
+        <button type="button" class="btn btn-primary" id="submit-exam">When you are done with the exam simply close the browser</button>
   
     </div>
 </div>
@@ -87,11 +89,7 @@ VF = Vex.Flow; /* Vexflow */
 
 const all_pitches = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 const all_accidentals = ['b', '#', '']
-        /* Delete at some point */
-        // all_labels = document.getElementsByClassName('col-12')
-        // for (i in all_labels) {
-        //     console.log(i);
-        // }
+
 
 // get the slate id provided in the url
         let params = new URLSearchParams(location.search);
@@ -142,7 +140,7 @@ const all_accidentals = ['b', '#', '']
                         // console.log(response[0].fields.first_name); 
                         // console.log(response[0].fields.last_name);
                         exam = response[0].fields.exam;
-                        console.log(exam)
+                        // console.log(exam)
                         initializeExamVisuals(exam);
                         startExam(exam);
                         // Here we will need to load the exam into full_exam
@@ -165,12 +163,6 @@ const all_accidentals = ['b', '#', '']
 
 
             $("#friend-form").submit(function (e) {
-                var dt = new Date(); /* Date time of start */
-                // var close time - Date + 40 minutes 
-                document.getElementById("datetime").innerHTML = dt.toLocaleString();
-                dtString = dt.toString();
-                full_exam.start_date_time = dt;
-                // console.log(typeof dt);
                 let exam = initializeExam();
                 let examString = JSON.stringify(exam);
                 // console.log(examString);
@@ -232,7 +224,8 @@ const all_accidentals = ['b', '#', '']
                         ID_Keyboard = 10, 
                         Insert_Barlines = 3, 
                         Rebeam_Music = 2,
-                        ID_Keys = 10, 
+                        ID_Major_Keys = 5,
+                        ID_Minor_Keys = 5, 
                         Write_Keys = 6) {
                 let exam = [1];   /* The array exam holds all the questions and answers of the exam */
                 total_number_of_questions = 0; /* holds the number of actual questions already initialized */
@@ -274,11 +267,25 @@ const all_accidentals = ['b', '#', '']
 
                 for (i = 0; i < Insert_Barlines; i++) {
                     exam.push(rhythm_question(i));
-                    console.log(rhythm_question(i));
                     addOptionSelector(question_number);
                     question_number ++;
                     total_number_of_questions ++;
                 }
+
+// TODO CREATE AND EVAULATE KEY SIGNATURE IDENTIFICATION
+                // for (i = 0; i < ID_Major_Keys; i++) {
+                //     exam.push(Make_ID_key(i , 'major'));
+                //     addOptionSelector(question_number);
+                //     question_number ++;
+                //     total_number_of_questions ++;
+                // }
+
+                // for (i = 0; i < ID_Minor_Keys; i++) {
+                //     exam.push(Make_ID_key(i , 'minor'));
+                //     addOptionSelector(question_number);
+                //     question_number ++;
+                //     total_number_of_questions ++;
+                // }           
 
                 function createPitch(octaves = [4,5], question_type = "", question_number) {
                 let pitch = all_pitches[Math.floor(Math.random() * all_pitches.length)];
@@ -314,13 +321,51 @@ const all_accidentals = ['b', '#', '']
                     return question;
                 }
 
+                var start_date_time = new Date(); /* initialize start time variable */
+                var end_date_time = new Date(); /* initialize end time variable */ 
+                let exam_duration = 40; /* in minutes */
+                end_date_time.setMinutes(start_date_time.getMinutes() + exam_duration); 
 
+                exam.push (
+                    {
+                        start_date_time: start_date_time.getTime(),
+                        end_date_time: end_date_time.getTime(),
+                        exam_duration: exam_duration,
+                    }
+
+                )
                 return exam;
             };
 
             function startExam(exam) {                
                 /* Always start from question 1 */
-                total_number_of_questions = Object.keys(exam).length;
+
+                if($("#start-exam").length) {
+                    $('#start-exam').hide();    
+                    // console.log($('#start-exam'))
+                };
+                if ($("#exam").length) {
+                    $('#exam').show();
+                }
+                // console.log(exam[exam.length -1].start_date_time);
+
+                let start_date_time = new Date();
+                start_date_time.setTime(parseInt(exam[exam.length -1].start_date_time));
+                $("#datetime").html(start_date_time);
+                end_date_time = (parseInt(exam[exam.length -1].end_date_time))
+                let time_left = Math.max (0, Math.round((end_date_time - new Date) / 60000));
+               
+                $('#timeleft').text(time_left + " Minutes");
+                setInterval(function() {
+                    time_left = Math.max (0, Math.round((end_date_time - new Date) / 60000));
+                    $('#timeleft').text(time_left + " Minutes");
+                    if (time_left == 0) {
+                        $('#submit-exam').html('Thank you for taking this placement exam<br> This exam has expired and changes will no longer be saved');
+                    }
+                }, 1000);
+
+
+                total_number_of_questions = Object.keys(exam).length - 1; /* the last question is actually where we hold the time started and time to close the exam */
                 question_number = 1;
                 document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
                 
@@ -394,6 +439,12 @@ const all_accidentals = ['b', '#', '']
             // show_question (exam[question_number]);
                 $("#save-work").click (function(e) {
                     e.preventDefault();
+                    start_date_time.setTime(parseInt(exam[exam.length -1].start_date_time));
+                    let time_left = Math.max (0, Math.round((end_date_time - new Date) / 60000));
+
+                    if (time_left == 0) {
+                        return;
+                    }
                     let examString = JSON.stringify(exam);
                     let params = new URLSearchParams(location.search);
                     let user_id = params.get('slateid');
@@ -415,7 +466,7 @@ const all_accidentals = ['b', '#', '']
     };
 
     function initializeExamVisuals(exam){
-        total_number_of_questions = Object.keys(exam).length;
+        total_number_of_questions = Object.keys(exam).length - 1 ;
         for (question_number = 1; question_number < total_number_of_questions; question_number++) {
             addOptionSelector(question_number);
         }
@@ -447,6 +498,7 @@ const all_accidentals = ['b', '#', '']
 
 
     function createContainer (question){
+
         serial = "1";
         current_question_div = document.getElementById("current_question");
 
@@ -620,8 +672,9 @@ const all_accidentals = ['b', '#', '']
         button_bar = document.getElementById("button-bar");
 
         if ((question.question_type.slice(0,2)) == "ID") {
+
             button_bar.style.display = "none";
-            // console.log(question);
+
             if (!question.given_accidental) {
                 var notes = [
                 new VF.StaveNote({clef: clef, keys: [question.given_pitch + "/" + question.given_octave], duration: "w" }),];
@@ -639,27 +692,33 @@ const all_accidentals = ['b', '#', '']
             // Render voice
             voice.draw(context, stave);
         }
-        else if ((question.question_type.slice(0,2)) == "Wr" ){
-          button_bar.style.display = "block";
-          if (clef == "treble") {
-            var pitches = ['d/4', 'd/4', 'd/4', 'd/4', 'd/4', 'e/4', 'f/4', 'g/4', 'a/4', 'b/4', 'c/5', 'd/5', 'e/5', 'f/5', 'g/5', 'g/5', 'g/5', 'g/5', 'g/5', 'g/5']
-            } else if (clef == "bass") {
-            var pitches = ['f/2', 'f/2', 'f/2', 'f/2', 'f/2', 'g/2', 'a/2', 'b/2', 'c/3', 'd/3', 'e/3', 'f/3', 'g/3', 'a/3', 'b/3', 'b/3', 'b/3', 'b/3', 'b/3', 'b/3']
-          };
-          // console.log(pitches);
-        if (question.answer_pitch) {
-            console.log("I am here!");
-            if (!question.answer_accidental) {
-                var accidental1 = "";
-                var notes = [
-                new VF.StaveNote({clef: clef, keys: [question.answer_pitch + "/" + question.answer_octave], duration: "w" }),];
-            }    
-            else {
-                var notes = [
-                new VF.StaveNote({clef: clef, keys: [question.answer_pitch + "/" + question.answer_octave], 
-                duration: "w" }).addAccidental(0, new VF.Accidental(question.answer_accidental)),];
-                var accidental1 = question.answer_accidental
+
+
+        else if ((question.question_type.slice(0,2)) == "Wr") {
+
+            button_bar.style.display = "block";
+            
+            if (clef == "treble") {
+                var pitches = ['d/4', 'd/4', 'd/4', 'd/4', 'd/4', 'e/4', 'f/4', 'g/4', 'a/4', 'b/4', 'c/5', 'd/5', 'e/5', 'f/5', 'g/5', 'g/5', 'g/5', 'g/5', 'g/5', 'g/5']
+                }
+            else if (clef == "bass") {
+                var pitches = ['f/2', 'f/2', 'f/2', 'f/2', 'f/2', 'g/2', 'a/2', 'b/2', 'c/3', 'd/3', 'e/3', 'f/3', 'g/3', 'a/3', 'b/3', 'b/3', 'b/3', 'b/3', 'b/3', 'b/3']
+            };
+
+            /* check if there's an answer already and display it */
+            if (question.answer_pitch) {
+                if (!question.answer_accidental) {
+                    var accidental1 = "";
+                    var notes = [
+                    new VF.StaveNote({clef: clef, keys: [question.answer_pitch + "/" + question.answer_octave], duration: "w" }),];
+                }    
+                else {
+                    var notes = [
+                    new VF.StaveNote({clef: clef, keys: [question.answer_pitch + "/" + question.answer_octave], 
+                    duration: "w" }).addAccidental(0, new VF.Accidental(question.answer_accidental)),];
+                    var accidental1 = question.answer_accidental
             }
+            
             var voice = new VF.Voice({num_beats: 2,  beat_value: 2});
             voice.addTickables(notes);
 
@@ -668,66 +727,45 @@ const all_accidentals = ['b', '#', '']
 
             // Render voice
             voice.draw(context, stave);
-        
-        }
-        
-        else {var accidental1 = ""};
+            }   
 
-        $('.accidental').on("click", function(evt) { 
-            var accidental1 = this.id;
-            if (question.answer_pitch) {
-                removeElements();
-                drawNotes (clef, question.answer_pitch + '/' + question.answer_octave, accidental1, context, stave);
-                // console.log(typeof (accidental1));
-                question.answer_accidental = accidental1;
-                // console.log(question);
-        }
-        });
+            else {
+                var accidental1 = ""
+            };
+
+
             /* find root svg element for this div */
             svg = div.querySelector('svg');
         
             /* add event listener for mouse click */
-            svg.addEventListener('click',function(evt){
-            var rect = this.getBoundingClientRect(); /* get bounding rectangle */
-            var x = evt.clientX - rect.left; /*subtract left corner from global x */
-            var y = evt.clientY - rect.top; /*subtract right corner from global y */
-            // console.log("x: "+x+" y:"+y);
-            var rounded_y = Math.ceil(y/5)*5;
+            svg.addEventListener('click', function (evt) {
 
-            // Use loc.x and loc.y here
+                $('.accidental').on("click", function(evt) { 
+                var accidental1 = this.id;
+                if (question.answer_pitch) {
+                    removeElements();
+                    drawNotes (clef, question.answer_pitch + '/' + question.answer_octave, accidental1, context, stave);
+                    // console.log(typeof (accidental1));
+                    question.answer_accidental = accidental1;
+                    // console.log(question);
+                    // document.getElementById('current_accidental').innerHTML = question.answer_accidental;
+                    }
+                });
+        
+                var rect = this.getBoundingClientRect(); /* get bounding rectangle */
+                var x = evt.clientX - rect.left; /*subtract left corner from global x */
+                var y = evt.clientY - rect.top; /*subtract right corner from global y */
+                
+                var rounded_y = Math.ceil(y/5)*5;
 
-            var index = 20 - Math.abs(rounded_y - 50)/5;
-            var pitch = pitches[index];
+                var index = 20 - Math.abs(rounded_y - 50)/5;
+                var pitch = pitches[index];
+                console.log(question.answer_accidental);
+                question.answer_pitch = pitch.slice(0,1);
+                question.answer_octave = pitch.slice(2,3);
+                removeElements();
+                drawNotes (clef, question.answer_pitch + '/' + question.answer_octave, question.answer_accidental, context, stave);
 
-            if (!accidental1) {
-                /* remove exisiting notes */
-                element = document.getElementById("boo1").getElementsByTagName("g");
-                // remove stave lines? how to redraw? Maybe just remove the ones added recently (ledger lines?) 
-                paths = document.getElementById("boo1").getElementsByTagName("path");
-                // console.log(paths)
-
-                for (index = element.length - 1; index >= 0; index--) {
-                    element[index].parentNode.removeChild(element[index]);
-                }                
-            
-                /* create new note */ 
-                var notes = [
-                    new VF.StaveNote({clef: clef, keys: [pitch], duration: "w" }),
-                    ];
-                    var voice = new VF.Voice({num_beats: 2,  beat_value: 2});
-                    voice.addTickables(notes);
-                // Format and justify the notes to 400 pixels.
-                    var formatter = new VF.Formatter().joinVoices([voice]).format([voice], 400);
-                // Render voice
-                voice.draw(context, stave);
-
-                }    
-            else {
-                var notes = [new VF.StaveNote({clef: clef, keys: [pitch], duration: "w" }).addAccidental(0, new VF.Accidental(accidental1)),];
-                }
-            question.answer_pitch = pitch.slice(0,1);
-            question.answer_accidental = accidental1;
-            question.answer_octave = pitch.slice(2,3);
         },false);
         
         }
@@ -764,6 +802,7 @@ const all_accidentals = ['b', '#', '']
             var formatter = new VF.Formatter().joinVoices([voice]).format([voice], 400);
         // Render voice
         voice.draw(context, stave);
+        return true;
     };
 
 
