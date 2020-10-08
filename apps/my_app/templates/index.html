@@ -1,9 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+* {
+    font-family: "Avenir"; 
+}
 
-<h1 class = "text-center" style = "padding: 10px"> Sunderman Conservatory </h1>
-<h1 class = "text-center"> Music Theory Placement Exam</h1>
+.jumbotron {
+    color: #e87722;
+    background-color: #002f6c;
+}
+
+</style>
+<div class="jumbotron">
+    <img src="/static/img/gettysg.jpg" style="width: 120px; float: left;">
+
+    <p class="h1 text-center" style = "padding: 10px; font-weight: bold;"> Sunderman Conservatory of Music</p>
+    <p class = "h1 text-center" style = "font-weight: bold;"> Music Theory Placement Exam</p>
+</div>
+
+
+
 <p class = "text-right" style = "padding: 10px">Time Started: <span id="datetime"></span></p>
 <p class = "text-right" style="padding: 10px"> Time left: <span id="timeleft"></span></p>
 <div class="container">
