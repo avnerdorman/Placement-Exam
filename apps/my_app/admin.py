@@ -4,7 +4,7 @@ from .models import Friend
 
 
 class FriendAdmin(admin.ModelAdmin):
-    list_display = ('slate_id', 'first_name', 'last_name', 'grade', 'treble_grade', 'bass_grade', 'insert_barline_grade')
+    list_display = ('slate_id', 'first_name', 'last_name', 'grade', 'treble_grade', 'bass_grade', 'insert_barline_grade', 'major_keys', 'minor_keys')
     
 admin.site.register(Friend, FriendAdmin)
 

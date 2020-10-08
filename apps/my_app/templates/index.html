@@ -16,7 +16,7 @@
     <img src="/static/img/gettysg.jpg" style="width: 120px; float: left;">
 
     <p class="h1 text-center" style = "padding: 10px; font-weight: bold;"> Sunderman Conservatory of Music</p>
-    <p class = "h1 text-center" style = "font-weight: bold;"> Music Theory Placement Exam</p>
+    <p class = "h1 text-center" style = "font-weight: bold;"> Theory Placement Assessment</p>
 </div>
 
 
@@ -65,7 +65,7 @@
         <button type="button" class="btn btn-primary" id="next">Next</button>
         <p><select id="question-number"></select></p>
         <button type="button" class="btn btn-primary" id="save-work" style="display:none">save your work</button>
-        <button type="button" class="btn btn-primary" id="submit-exam">When you are done with the exam simply close the browser</button>
+        <button type="button" class="btn btn-primary" id="submit-exam">When you are done with the assessment simply close the browser</button>
   
     </div>
 </div>
@@ -241,8 +241,8 @@ const all_accidentals = ['b', '#', '']
                         ID_Keyboard = 10, 
                         Insert_Barlines = 3, 
                         Rebeam_Music = 2,
-                        ID_Major_Keys = 5,
-                        ID_Minor_Keys = 5, 
+                        Major_Keys = 5,
+                        Minor_Keys = 5, 
                         Write_Keys = 6) {
                 let exam = [1];   /* The array exam holds all the questions and answers of the exam */
                 total_number_of_questions = 0; /* holds the number of actual questions already initialized */
@@ -290,39 +290,77 @@ const all_accidentals = ['b', '#', '']
                 }
 
 // TODO CREATE AND EVAULATE KEY SIGNATURE IDENTIFICATION
-                // for (i = 0; i < ID_Major_Keys; i++) {
-                //     exam.push(Make_ID_key(i , 'major'));
-                //     addOptionSelector(question_number);
-                //     question_number ++;
-                //     total_number_of_questions ++;
-                // }
+                
+                let possible_major_keys = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+                let major_keys = getRandom (possible_major_keys, Major_Keys);
 
-                // for (i = 0; i < ID_Minor_Keys; i++) {
-                //     exam.push(Make_ID_key(i , 'minor'));
-                //     addOptionSelector(question_number);
-                //     question_number ++;
-                //     total_number_of_questions ++;
-                // }           
+                for (const key in major_keys) {
+                    let question = {
+                        question_type: 'Major_Keys',
+                        question_number: question_number,
+                        key: major_keys[key],
+                        raw_answer: '', 
+                        points_worth: 1,
+                        clef: ['bass', 'treble'][Math.round(Math.random())],                         
+                        }
+                    exam.push (question);
+                    question_number ++;
+                    addOptionSelector(question_number);
+                    total_number_of_questions ++;
+                }
+
+                let possible_minor_keys = ['Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'Bbm', 'Bm']
+                let minor_keys = getRandom (possible_minor_keys, Minor_Keys);
+
+                for (const key in major_keys) {
+                    let question = {
+                        question_type: 'Minor_Keys',
+                        question_number: question_number,
+                        key: minor_keys[key],
+                        raw_answer: '', 
+                        points_worth: 1,
+                        clef: ['bass', 'treble'][Math.round(Math.random())],
+                        }
+                    exam.push (question);
+                    question_number ++;
+                    addOptionSelector(question_number);
+                    total_number_of_questions ++;
+                }
+      
+                function getRandom(arr, n) {
+                    var result = new Array(n),
+                    len = arr.length,
+                    taken = new Array(len);
+                    if (n > len)
+                        throw new RangeError("getRandom: more elements taken than available");
+                        while (n--) {
+                            var x = Math.floor(Math.random() * len);
+                            result[n] = arr[x in taken ? taken[x] : x];
+                            taken[x] = --len in taken ? taken[len] : len;
+                        }
+                    return result;
+                }
 
                 function createPitch(octaves = [4,5], question_type = "", question_number) {
-                let pitch = all_pitches[Math.floor(Math.random() * all_pitches.length)];
-                let octave = octaves[Math.floor(Math.random() * octaves.length)];
-                let accidental = all_accidentals[Math.floor(Math.random() * all_accidentals.length)];
-                let question = {
-                    question_type: question_type,
-                    given_pitch: pitch,
-                    given_octave: octave,
-                    given_accidental: accidental,
-                    answer_pitch: "",
-                    answer_accidental: "",
-                    answer_octave: "",
-                    question_number: question_number,
-                    raw_answer: "",
-                    points_worth: 1,
-                    points_earned: 0,
+                    let pitch = all_pitches[Math.floor(Math.random() * all_pitches.length)];
+                    let octave = octaves[Math.floor(Math.random() * octaves.length)];
+                    let accidental = all_accidentals[Math.floor(Math.random() * all_accidentals.length)];
+                    let question = {
+                        question_type: question_type,
+                        given_pitch: pitch,
+                        given_octave: octave,
+                        given_accidental: accidental,
+                        answer_pitch: "",
+                        answer_accidental: "",
+                        answer_octave: "",
+                        question_number: question_number,
+                        raw_answer: "",
+                        points_worth: 1,
+                        points_earned: 0,
+                    }
+                    return question;
                 }
-                return question;
-            }
+
                 function rhythm_question(id) {
                     rhythms_array = [
                     "X:1\nK: clef=perc\nL:1/8\nM:4/4\nBB-BB- B3 B |B>B B>B B3 B/B/| BB/B/ B<B BB/B/ B<B  |B2 BB B2 B2|",
@@ -377,7 +415,7 @@ const all_accidentals = ['b', '#', '']
                     time_left = Math.max (0, Math.round((end_date_time - new Date) / 60000));
                     $('#timeleft').text(time_left + " Minutes");
                     if (time_left == 0) {
-                        $('#submit-exam').html('Thank you for taking this placement exam<br> This exam has expired and changes will no longer be saved');
+                        $('#submit-exam').html('Thank you for taking this placement assessment<br> This exam has expired and changes will no longer be saved');
                     }
                 }, 1000);
 
@@ -506,8 +544,15 @@ const all_accidentals = ['b', '#', '']
                 question = show_ID_Notes(question);
                 break;
             case "Insert_Barlines":
-                show_Insert_Barlines(question);
-                };
+                show_Insert_Barlines(question);  
+                break;
+            case "Major_Keys":
+                Major_Keys(question);
+                break;
+            case "Minor_Keys":
+                Minor_Keys(question);
+                break;
+            }
         // console.log(question);
         return question;  
     }
@@ -536,11 +581,11 @@ const all_accidentals = ['b', '#', '']
             document.getElementById("question_prompt").innerHTML = "Name the following note"
             input.style.display = "block";
 
-        if (!question.raw_answer) {
-            input.placeholder = "Name the note"}
-        else {
-            input.placeholder = question.raw_answer
-            }  
+            if (!question.raw_answer) {
+                input.placeholder = "Name the note"}
+            else {
+                input.placeholder = question.raw_answer
+                }  
         }
         /* check if it's a writing question */ 
         else if (question.question_type.slice(0,2) == "Wr") {
@@ -551,9 +596,42 @@ const all_accidentals = ['b', '#', '']
         else if (question.question_type == "Insert_Barlines") {
             document.getElementById("question_prompt").innerHTML = "Add barlines to the following rhythm. Click on a note to add a barline after it. Click again to remove the barline.";
         }
+
         input.type = "text";
         input.size = "4";
         document.getElementById(container.id).appendChild(input);  
+    }
+
+    function Major_Keys(question){
+        createContainer(question);
+        $("#question_prompt").html("Name the following <strong> Major </strong> Key ");
+        if (question.raw_answer) {
+            $("#answer1").val(question.raw_answer);
+        }
+        var container = document.getElementById('boo1');
+        let question_number = question.question_number;
+        var div = document.createElement('div');
+        div.id = 'paper';
+        document.getElementById(container.id).appendChild(div);
+        music = "X:1\nM:C\nK:" + question.key + " clef="+question.clef+"\nL: 1/4\n x4"
+        var visualObjs = ABCJS.renderAbc("paper", music);
+        return 
+    }
+
+    function Minor_Keys(question){
+        createContainer(question);
+        $("#question_prompt").html("Name the following <strong> Minor </strong> Key ");
+        if (question.raw_answer) {
+            $("#answer1").val(question.raw_answer);
+        }
+        var container = document.getElementById('boo1');
+        let question_number = question.question_number;
+        var div = document.createElement('div');
+        div.id = 'paper';
+        document.getElementById(container.id).appendChild(div);
+        music = "X:1\nM:C\nK:" + question.key + " clef="+question.clef+"\nL: 1/4\n x4"
+        var visualObjs = ABCJS.renderAbc("paper", music);
+        return 
     }
 
     function show_Insert_Barlines(question){

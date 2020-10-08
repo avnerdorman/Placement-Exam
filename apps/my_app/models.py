@@ -23,7 +23,7 @@ class Friend(models.Model):
     # correct_out_of_keys = models.CharField(max_length = 20)
 
     exam = models.JSONField(default=list)
-    
+
     @property
     def question(self):
         return self.exam[1]
@@ -38,9 +38,26 @@ class Friend(models.Model):
         out_of = 0
         for i in self.exam[1:]:
             try:
-                if i['given_pitch'] == i['answer_pitch'] and i['given_accidental'] == i['answer_accidental']:
-                    current_grade += int(i['points_worth'])
-                out_of += 1
+                if i['question_type'][:2] == 'ID':
+                    if i['given_pitch'] == i['answer_pitch'] and i['given_accidental'] == i['answer_accidental']:
+                        current_grade += int(i['points_worth'])
+                    out_of += 1
+                
+                if i['question_type'] == 'Insert_Barlines':
+                    if i['given_rhythm'] == i['answer_rhythm']:
+                        current_grade += 5
+                    out_of += 5
+
+                if i['question_type'] == 'Major_Keys':
+                    if i['raw_answer'].lower() == i['key'].lower():
+                        current_grade += 2
+                    out_of += 2
+
+                if i['question_type'] == 'Minor_Keys':
+                    if i['raw_answer'].lower()+'m' == i['key'].lower():
+                        current_grade += 2
+                    out_of += 2                
+
             except:
                 pass
         return str(int(100*current_grade/out_of))+"%"
@@ -82,11 +99,44 @@ class Friend(models.Model):
             try:
                 if i['question_type'] == 'Insert_Barlines':
                     if i['given_rhythm'] == i['answer_rhythm']:
-                        current_grade += 1
-                    out_of += 1
+                        current_grade += 5
+                    out_of += 5
             except: 
                 pass
         return str(int(100*current_grade/out_of))+"%"
+
+    @property
+    def major_keys(self):
+        current_grade = 0
+        out_of = 0
+        for i in self.exam[1:]:
+            try:
+                if i['question_type'] == 'Major_Keys':
+                    if i['raw_answer'].lower() == i['key'].lower():
+                        current_grade += 2
+                    out_of += 2
+            except:
+                pass
+        if out_of == 0:
+            out_of = 1
+        return str(int(100*current_grade/out_of))+"%" 
+
+    @property
+    def minor_keys(self):
+        current_grade = 0
+        out_of = 0
+        for i in self.exam[1:]:
+            try:
+                if i['question_type'] == 'Minor_Keys':
+                    if i['raw_answer'].lower()+'m' == i['key'].lower():
+                        current_grade += 2
+                    out_of += 2
+            except:
+                pass
+        if out_of == 0:
+            out_of = 1
+        return str(int(100*current_grade/out_of))+"%"
+
 
     def __str__(self):
         return self.first_name + self.last_name
