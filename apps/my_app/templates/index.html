@@ -21,8 +21,8 @@
 
 
 
-<p class = "text-right" style = "padding: 10px">Time Started: <span id="datetime"></span></p>
-<p class = "text-right" style="padding: 10px"> Time left: <span id="timeleft"></span></p>
+<p class = "text-right" style = "float: right;">Time Started: <span id="datetime"></span></p>
+<p class = "text-left" style = "background-color: #eeeeee;"> Time left: <span id="timeleft"></span></p>
 <div class="container">
     <form id="friend-form">
         <div class="row">
@@ -368,7 +368,7 @@ const all_accidentals = ['b', '#', '']
 
                 let start_date_time = new Date();
                 start_date_time.setTime(parseInt(exam[exam.length -1].start_date_time));
-                $("#datetime").html(start_date_time);
+                $("#datetime").html(start_date_time.toString().slice(0,24));
                 end_date_time = (parseInt(exam[exam.length -1].end_date_time))
                 let time_left = Math.max (0, Math.round((end_date_time - new Date) / 60000));
                
