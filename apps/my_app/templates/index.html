@@ -524,7 +524,7 @@ const all_accidentals = ['b', '#', '']
                     // exam[question_number].answer_accidental = answer.slice (1) || "none";
                     // };
                     if (question_number > 1) { question_number -= 1};
-                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString()  + " out of " + (total_number_of_questions-1);
+                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
                     var pagebutton= document.getElementById("save-work");
                     pagebutton.click();
                     exam[question_number] = show_question (exam[question_number]);
@@ -545,7 +545,7 @@ const all_accidentals = ['b', '#', '']
                     // exam[question_number].answer_accidental = answer.slice (1) || "";
                     // };
                     if (question_number < total_number_of_questions - 1) { question_number += 1};
-                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString() + " out of " + (total_number_of_questions-1);
+                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
                     var pagebutton= document.getElementById("save-work");
                     pagebutton.click();
                     exam[question_number] = show_question (exam[question_number]);
@@ -565,7 +565,7 @@ const all_accidentals = ['b', '#', '']
                     // exam[question_number].answer_accidental = answer.slice (1) || "";
                     // };
                     question_number = parseInt(event.target.value);
-                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString()  + " out of " + (total_number_of_questions-1);
+                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
                     var pagebutton= document.getElementById("save-work");
                     pagebutton.click();
                     exam[question_number] = show_question (exam[question_number]);
