@@ -49,12 +49,12 @@ class Friend(models.Model):
                     out_of += 5
 
                 if i['question_type'] == 'Major_Keys':
-                    if i['raw_answer'].lower() == i['key'].lower():
+                    if i['answer_pitch'].lower() + i['answer_accidental'] == i['key'].lower():
                         current_grade += 2
                     out_of += 2
 
                 if i['question_type'] == 'Minor_Keys':
-                    if i['raw_answer'].lower()+'m' == i['key'].lower():
+                    if i['answer_pitch'].lower()+i['answer_accidental']+'m' == i['key'].lower():
                         current_grade += 2
                     out_of += 2                
 
@@ -112,7 +112,7 @@ class Friend(models.Model):
         for i in self.exam[1:]:
             try:
                 if i['question_type'] == 'Major_Keys':
-                    if i['raw_answer'].lower() == i['key'].lower():
+                    if i['answer_pitch'].lower() + i['answer_accidental'] == i['key'].lower():
                         current_grade += 2
                     out_of += 2
             except:
@@ -128,7 +128,7 @@ class Friend(models.Model):
         for i in self.exam[1:]:
             try:
                 if i['question_type'] == 'Minor_Keys':
-                    if i['raw_answer'].lower()+'m' == i['key'].lower():
+                    if i['answer_pitch'].lower() + i['answer_accidental'] + 'm' == i['key'].lower():
                         current_grade += 2
                     out_of += 2
             except:

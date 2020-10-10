@@ -1,5 +1,15 @@
 {% extends "base.html" %}
 
+<title>
+    
+{% block title %}
+
+    Sunderman Conservatory Theory Assessment
+
+{% endblock title %}
+
+</title>
+
 {% block content %}
 <style>
 * {
@@ -11,7 +21,12 @@
     background-color: #002f6c;
 }
 
+button {
+    margin-left:10px;
+}
+
 </style>
+
 <div class="jumbotron">
     <img src="/static/img/gettysg.jpg" style="width: 120px; float: left;">
 
@@ -50,6 +65,22 @@
         <div id = "question_number"></div>
         <div class="d-flex justify-content-center" id = "current_question"> This will hold the current question</div>
   
+        <div class="container" id="note-name-bar">
+            <p></p>
+                <div class="btn-group btn-group-lg">
+                    <button type="button" class="note-name" id="c">C</button>
+                    <button type="button" class="note-name" id="d">D</button>
+                    <button type="button" class="note-name" id="e">E</button>
+                    <button type="button" class="note-name" id="f">F</button>
+                    <button type="button" class="note-name" id="g">G</button>
+                    <button type="button" class="note-name" id="a">A</button>
+                    <button type="button" class="note-name" id="b">B</button>
+                    <button type="button" class="note-name" id="sharp">&#9839;</button>
+                    <button type="button" class="note-name" id="natural">&#9838;</button>
+                    <button type="button" class="note-name" id="flat">&#9837;</button>
+                </div>
+        </div>
+
         <div class="container" id="button-bar">
             <div class="row">
                 <div class="col text-center">
@@ -60,12 +91,14 @@
                 </div>
             </div>
         </div>  
-        
+        <p></p>
+
         <button type="button" class="btn btn-primary" id="previous">Previous</button>
         <button type="button" class="btn btn-primary" id="next">Next</button>
+        <p></p>
         <p><select id="question-number"></select></p>
         <button type="button" class="btn btn-primary" id="save-work" style="display:none">save your work</button>
-        <button type="button" class="btn btn-primary" id="submit-exam">When you are done with the assessment simply close the browser</button>
+        <div type="button" class="btn btn-primary" id="submit-exam" onclick="complete()">Complete the exam</button>
   
     </div>
 </div>
@@ -131,6 +164,13 @@ const all_accidentals = ['b', '#', '']
             grade_key_signatures:"",
         }
         slate_id = user_id;
+
+        function complete() {
+            if (confirm("Are you sure you are done?")) {
+                window.location.href = "https://www.gettysburg.edu/academic-programs/sunderman-conservatory/";
+            }
+
+        }
 
     $(document).ready(function () {
 
@@ -299,7 +339,8 @@ const all_accidentals = ['b', '#', '']
                         question_type: 'Major_Keys',
                         question_number: question_number,
                         key: major_keys[key],
-                        raw_answer: '', 
+                        answer_pitch: "",
+                        answer_accidental: "",
                         points_worth: 1,
                         clef: ['bass', 'treble'][Math.round(Math.random())],                         
                         }
@@ -317,7 +358,8 @@ const all_accidentals = ['b', '#', '']
                         question_type: 'Minor_Keys',
                         question_number: question_number,
                         key: minor_keys[key],
-                        raw_answer: '', 
+                        answer_pitch: "",
+                        answer_accidental: "",
                         points_worth: 1,
                         clef: ['bass', 'treble'][Math.round(Math.random())],
                         }
@@ -424,6 +466,44 @@ const all_accidentals = ['b', '#', '']
                 question_number = 1;
                 document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
                 
+                $(".note-name").click (function (evt) {
+                    var note_name = this.id;
+                    if ($("#answer1").length > 0) {
+                        if (note_name.length == 1) {
+                            exam[question_number].answer_pitch = note_name;
+                        }
+                        else if (exam[question_number].answer_pitch) {
+                            switch (note_name) {
+                                case 'sharp':
+                                    exam[question_number].answer_accidental = "#";
+                                    break;
+                                case 'natural':
+                                    exam[question_number].answer_accidental = "";
+                                    break;
+                                case 'flat':
+                                    exam[question_number].answer_accidental = "b";
+                                    break;
+                            }
+                        }
+
+                        console.log(exam[question_number])
+                        if (exam[question_number].answer_pitch) {
+                            let addendum = "";
+                            if (exam[question_number].question_type == "Major_Keys" || exam[question_number].question_type == "Minor_Keys") {
+                                addendum = " " + exam[question_number].question_type.slice(0,5);
+                            }
+                            $("#answer1").html("<strong> Your answer is " + exam[question_number].answer_pitch.toUpperCase() + exam[question_number].answer_accidental + addendum + "</strong>") ;
+                        }
+                        else {
+                            $("#answer1").html("Please use the buttons to choose a pitch and/or accidental");
+                        }
+
+                        
+                    }
+                    var pagebutton= document.getElementById("save-work");
+                    pagebutton.click();
+
+                })
                 // console.log(exam[question_number]);
                 
                 exam[question_number] = show_question (exam[question_number]);
@@ -436,15 +516,15 @@ const all_accidentals = ['b', '#', '']
                     if (document.contains(document.getElementById("reset"))) {
                     document.getElementById("reset").remove();}
                 
-                    let current_input = document.getElementById("answer1").value;
-                    if (current_input) {
-                    exam[question_number].raw_answer = current_input;
-                    answer = current_input.toLowerCase();
-                    exam[question_number].answer_pitch = answer.slice(0,1) || "none";
-                    exam[question_number].answer_accidental = answer.slice (1) || "none";
-                    };
+                    // let current_input = document.getElementById("answer1").value;
+                    // if (current_input) {
+                    // exam[question_number].raw_answer = current_input;
+                    // answer = current_input.toLowerCase();
+                    // exam[question_number].answer_pitch = answer.slice(0,1) || "none";
+                    // exam[question_number].answer_accidental = answer.slice (1) || "none";
+                    // };
                     if (question_number > 1) { question_number -= 1};
-                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
+                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString()  + " out of " + (total_number_of_questions-1);
                     var pagebutton= document.getElementById("save-work");
                     pagebutton.click();
                     exam[question_number] = show_question (exam[question_number]);
@@ -457,15 +537,15 @@ const all_accidentals = ['b', '#', '']
                     // console.log(exam[question_number]);
                     if (document.contains(document.getElementById("reset"))) {
                     document.getElementById("reset").remove();}
-                   let current_input = document.getElementById("answer1").value;
-                    if (current_input) {
-                    exam[question_number].raw_answer = current_input;
-                    answer = current_input.toLowerCase();
-                    exam[question_number].answer_pitch = answer.slice(0,1) || "";
-                    exam[question_number].answer_accidental = answer.slice (1) || "";
-                    };
+                    // let current_input = document.getElementById("answer1").value;
+                    // if (current_input) {
+                    // exam[question_number].raw_answer = current_input;
+                    // answer = current_input.toLowerCase();
+                    // exam[question_number].answer_pitch = answer.slice(0,1) || "";
+                    // exam[question_number].answer_accidental = answer.slice (1) || "";
+                    // };
                     if (question_number < total_number_of_questions - 1) { question_number += 1};
-                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
+                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString() + " out of " + (total_number_of_questions-1);
                     var pagebutton= document.getElementById("save-work");
                     pagebutton.click();
                     exam[question_number] = show_question (exam[question_number]);
@@ -477,15 +557,15 @@ const all_accidentals = ['b', '#', '']
                     // console.log(typeof(event.target.value));
                     if (document.contains(document.getElementById("reset"))) {
                     document.getElementById("reset").remove();}
-                    let current_input = document.getElementById("answer1").value;
-                    if (current_input) {
-                    exam[question_number].raw_answer = current_input;
-                    answer = current_input.toLowerCase();
-                    exam[question_number].answer_pitch = answer.slice(0,1) || "";
-                    exam[question_number].answer_accidental = answer.slice (1) || "";
-                    };
+                    // let current_input = document.getElementById("answer1").value;
+                    // if (current_input) {
+                    // exam[question_number].raw_answer = current_input;
+                    // answer = current_input.toLowerCase();
+                    // exam[question_number].answer_pitch = answer.slice(0,1) || "";
+                    // exam[question_number].answer_accidental = answer.slice (1) || "";
+                    // };
                     question_number = parseInt(event.target.value);
-                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString();
+                    document.getElementById('question_title').innerHTML = "Question " + question_number.toString()  + " out of " + (total_number_of_questions-1);
                     var pagebutton= document.getElementById("save-work");
                     pagebutton.click();
                     exam[question_number] = show_question (exam[question_number]);
@@ -574,24 +654,25 @@ const all_accidentals = ['b', '#', '']
         div.className = "d-flex p-2";
         document.getElementById(container.id).appendChild(div);  
 
-        var input = document.createElement('input');
+        var input = document.createElement('div');
         input.id = 'answer' + serial;
-        input.autocomplete = "new-password"
+        // input.autocomplete = "new-password"
         if (question.question_type.slice(0,2) == "ID") {
-            document.getElementById("question_prompt").innerHTML = "Name the following note"
-            input.style.display = "block";
+            document.getElementById("question_prompt").innerHTML = question.question_type.slice(3) + " Clef: Name the following note"
+            // input.style.display = "block";
 
             if (!question.raw_answer) {
-                input.placeholder = "Name the note"}
+                input.innerHTML = "<strong> Please click on a note and/or accidental to answer </strong>"
+                }
             else {
-                input.placeholder = question.raw_answer
+                input.placeholder = "<strong> Your answer is: </strong>" + question.raw_answer
                 }  
         }
         /* check if it's a writing question */ 
         else if (question.question_type.slice(0,2) == "Wr") {
             input.placeholder = "Write the note <strong>" + (question.given_pitch.toUpperCase() + question.given_accidental + "</strong> on the staff");
             input.style.display = "none";
-            document.getElementById("question_prompt").innerHTML = "Write the note <strong>" + (question.given_pitch.toUpperCase() + question.given_accidental) + "</strong> by clicking <strong>in</strong> the staff";
+            document.getElementById("question_prompt").innerHTML = question.question_type.slice(6) + " Clef: Write the note <strong>" + (question.given_pitch.toUpperCase() + question.given_accidental) + "</strong> by clicking <strong>in</strong> the staff";
         }
         else if (question.question_type == "Insert_Barlines") {
             document.getElementById("question_prompt").innerHTML = "Add barlines to the following rhythm. Click on a note to add a barline after it. Click again to remove the barline.";
@@ -604,10 +685,24 @@ const all_accidentals = ['b', '#', '']
 
     function Major_Keys(question){
         createContainer(question);
+        note_name_bar = document.getElementById("note-name-bar");
+        button_bar = document.getElementById("button-bar");
+        note_name_bar.style.display = "block";
+        button_bar.style.display = "none";
+        if (question.answer_pitch) {
+                $(answer1).html ("<strong> Your answer is " + question.answer_pitch.toUpperCase() + question.answer_accidental + " Major </strong>");
+            }
+            else {
+                $(answer1).html ("<strong> Please click on a note and/or accidental to answer </strong>");
+            }
+
+
         $("#question_prompt").html("Name the following <strong> Major </strong> Key ");
         if (question.raw_answer) {
             $("#answer1").val(question.raw_answer);
         }
+        input = document.getElementById("answer1");
+        input.autocomplete = "new-password";
         var container = document.getElementById('boo1');
         let question_number = question.question_number;
         var div = document.createElement('div');
@@ -620,10 +715,22 @@ const all_accidentals = ['b', '#', '']
 
     function Minor_Keys(question){
         createContainer(question);
+        note_name_bar = document.getElementById("note-name-bar");
+        button_bar = document.getElementById("button-bar");
+        note_name_bar.style.display = "block";
+        button_bar.style.display = "none";
+                if (question.answer_pitch) {
+                $(answer1).html ("Your answer is " + question.answer_pitch.toUpperCase() + question.answer_accidental + " Minor");
+            }
+            else {
+                $(answer1).html ("Please click on a note and/or accidental to answer ");
+            }
         $("#question_prompt").html("Name the following <strong> Minor </strong> Key ");
         if (question.raw_answer) {
             $("#answer1").val(question.raw_answer);
         }
+        input = document.getElementById("answer1");
+        input.autocomplete = "new-password";
         var container = document.getElementById('boo1');
         let question_number = question.question_number;
         var div = document.createElement('div');
@@ -636,6 +743,8 @@ const all_accidentals = ['b', '#', '']
 
     function show_Insert_Barlines(question){
         createContainer(question);
+        note_name_bar = document.getElementById("note-name-bar");
+        note_name_bar.style.display = "none";
         let question_number = document.getElementById("question_title").innerHTML.slice(-2);
         var container = document.getElementById('boo1');
         var div = document.createElement('div');
@@ -735,7 +844,7 @@ const all_accidentals = ['b', '#', '']
     function show_ID_Notes(question) {
         // Create a container for this note
         createContainer(question);
-
+        
         // Create an SVG renderer and attach it to the DIV element named "boo".
         var div = document.getElementById("boo1");
         var renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
@@ -762,13 +871,20 @@ const all_accidentals = ['b', '#', '']
 
         // Connect it to the rendering context and draw!
         stave.setContext(context).draw();
-
-        /* get the button bar */ 
+        note_name_bar = document.getElementById("note-name-bar");
         button_bar = document.getElementById("button-bar");
 
+        /* get the button bar */ 
         if ((question.question_type.slice(0,2)) == "ID") {
-
+            note_name_bar.style.display = "block";
             button_bar.style.display = "none";
+
+            if (question.answer_pitch) {
+                $(answer1).html ("<strong> Your answer is " + question.answer_pitch.toUpperCase() + question.answer_accidental + "</strong>");
+            }
+            else {
+                $(answer1).html ("<strong> Please click on a note and/or accidental to answer </strong>");
+            }
 
             if (!question.given_accidental) {
                 var notes = [
@@ -786,11 +902,12 @@ const all_accidentals = ['b', '#', '']
 
             // Render voice
             voice.draw(context, stave);
+
         }
 
 
         else if ((question.question_type.slice(0,2)) == "Wr") {
-
+            note_name_bar.style.display = "none";
             button_bar.style.display = "block";
             
             if (clef == "treble") {
@@ -862,7 +979,7 @@ const all_accidentals = ['b', '#', '']
                 drawNotes (clef, question.answer_pitch + '/' + question.answer_octave, question.answer_accidental, context, stave);
 
         },false);
-        
+
         }
         return question;
 
