@@ -486,7 +486,7 @@ const all_accidentals = ['b', '#', '']
                             }
                         }
 
-                        console.log(exam[question_number])
+                        // console.log(exam[question_number])
                         if (exam[question_number].answer_pitch) {
                             let addendum = "";
                             if (exam[question_number].question_type == "Major_Keys" || exam[question_number].question_type == "Minor_Keys") {
@@ -505,7 +505,19 @@ const all_accidentals = ['b', '#', '']
 
                 })
                 // console.log(exam[question_number]);
-                
+
+                $('.accidental').on("click", function(evt) { 
+                    if ($("svg").length >0 ) {
+                        if (exam[question_number].answer_pitch) {
+                            exam[question_number].answer_accidental = this.id;
+                            var pagebutton= document.getElementById("save-work");
+                            pagebutton.click();
+                            removeElements();
+                            show_question(exam[question_number]);
+                        } 
+                    }
+                });
+
                 exam[question_number] = show_question (exam[question_number]);
 
                 /* Listener for PREVIOUS question */
@@ -614,7 +626,6 @@ const all_accidentals = ['b', '#', '']
 
     function show_question(question) {
         current_question_div = document.getElementById("current_question");
-        // console.log(question);
         current_question_div.innerHTML = " ";
         switch (question.question_type){
             case "ID_Treble":
@@ -952,31 +963,20 @@ const all_accidentals = ['b', '#', '']
             /* add event listener for mouse click */
             svg.addEventListener('click', function (evt) {
 
-                $('.accidental').on("click", function(evt) { 
-                var accidental1 = this.id;
-                if (question.answer_pitch) {
-                    removeElements();
-                    drawNotes (clef, question.answer_pitch + '/' + question.answer_octave, accidental1, context, stave);
-                    // console.log(typeof (accidental1));
-                    question.answer_accidental = accidental1;
-                    // console.log(question);
-                    // document.getElementById('current_accidental').innerHTML = question.answer_accidental;
-                    }
-                });
-        
-                var rect = this.getBoundingClientRect(); /* get bounding rectangle */
-                var x = evt.clientX - rect.left; /*subtract left corner from global x */
-                var y = evt.clientY - rect.top; /*subtract right corner from global y */
-                
-                var rounded_y = Math.ceil(y/5)*5;
+            var rect = this.getBoundingClientRect(); /* get bounding rectangle */
+            var x = evt.clientX - rect.left; /*subtract left corner from global x */
+            var y = evt.clientY - rect.top; /*subtract right corner from global y */
+            
+            var rounded_y = Math.ceil(y/5)*5;
 
-                var index = 20 - Math.abs(rounded_y - 50)/5;
-                var pitch = pitches[index];
-                console.log(question.answer_accidental);
-                question.answer_pitch = pitch.slice(0,1);
-                question.answer_octave = pitch.slice(2,3);
-                removeElements();
-                drawNotes (clef, question.answer_pitch + '/' + question.answer_octave, question.answer_accidental, context, stave);
+            var index = 20 - Math.abs(rounded_y - 50)/5;
+            var pitch = pitches[index];
+            exam[question.question_number].answer_pitch = pitch.slice(0,1);
+            exam[question.question_number].answer_octave = pitch.slice(2,3);
+            removeElements();
+            drawNotes (clef, question.answer_pitch + '/' + question.answer_octave, question.answer_accidental, context, stave);
+            var pagebutton= document.getElementById("save-work");
+            pagebutton.click();
 
         },false);
 
