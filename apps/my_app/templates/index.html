@@ -393,7 +393,8 @@ const all_accidentals = ['b', '#', '']
                     if (exam[question_number-1]) {
                         if (pitch == exam[question_number-1].given_pitch) {
                             var index = all_pitches.indexOf(pitch);
-                            pitch = all_pitches[index - 1];
+                            if (index == 0) {pitch = all_pitches[6]}
+                            else {pitch = all_pitches[index - 1]}                           
                         }
                     };
                     let octave = octaves[Math.floor(Math.random() * octaves.length)];
