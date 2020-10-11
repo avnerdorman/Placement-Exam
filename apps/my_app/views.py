@@ -22,7 +22,7 @@ def postFriend(request):
         form = FriendForm(request.POST)
         # queryset = Friend.objects.all()
         updated_exam = form['exam'].value()
-        print (json.loads(updated_exam))
+        # print (json.loads(updated_exam))
 
         if form.is_valid():
             instance = form.save()
@@ -41,53 +41,37 @@ def postFriend(request):
 def updateFriend(request):
     if request.is_ajax:
         form = FriendForm(request.POST)
-        print ("slate id is ", form['slate_id'].value())
+        # print ("slate id is ", form['slate_id'].value())
         this_entry = Friend.objects.get(slate_id=form['slate_id'].value())
         # # print ("this entry is ", this_entry)
         updated_exam = json.loads(form['exam'].value())
-        print (updated_exam)
+        # print (updated_exam)
         Friend.objects.filter(pk=this_entry.pk).update(exam=updated_exam)
         return JsonResponse({'foo': 'bar'})
     return JsonResponse({"error": ""}, status=400)
-
-#
-# # BONUS CBV
-# def checkSlateID(request, slate_id):
-#     # request should be ajax and method should be GET.
-#     if request.is_ajax and request.method == "GET":
-#         # check for the slate id in the database.
-#         if Friend.objects.filter(slate_id = slate_id).exists():
-#             # if slate_id found return not valid new friend
-#             objectQuerySet = Friend.objects.filter(slate_id = slate_id)
-#             data = serializers.serialize("json", objectQuerySet)
-#             return HttpResponse(data, content_type="text/json-comment-filtered")
-#
-#             # return JsonResponse({"valid":False}, status = 200)
-#         else:
-#             # if slate_id not found, then user can create a new friend.
-#             return JsonResponse({"valid":True}, status = 200)
-#
-#     return JsonResponse({}, status = 400)
 
 
 # BONUS CBV
 def checkSlateID(request):
     # request should be ajax and method should be GET.
     if request.is_ajax and request.method == "GET":
-        slate_id = request.GET.get('slate_id')
+        # get the slate id from the client side.
+        slate_id = request.GET.get("slate_id", None)
         # check for the slate id in the database.
-        if Friend.objects.filter(slate_id=slate_id).exists():
+        if Friend.objects.filter(slate_id = slate_id).exists():
             # if slate_id found return not valid new friend
-            objectQuerySet = Friend.objects.filter(slate_id=slate_id)
+            objectQuerySet = Friend.objects.filter(slate_id = slate_id)
             data = serializers.serialize("json", objectQuerySet)
             return HttpResponse(data, content_type="text/json-comment-filtered")
 
             # return JsonResponse({"valid":False}, status = 200)
         else:
             # if slate_id not found, then user can create a new friend.
-            return JsonResponse({"valid": True}, status=200)
+            return JsonResponse({"valid":True}, status = 200)
 
-    return JsonResponse({}, status=400)
+    return JsonResponse({}, status = 400)
+    
+
 
 
 class FriendView(View):
