@@ -544,7 +544,7 @@ const all_accidentals = ['b', '#', '']
                     let percentage_done = (100*(total_answered_already/total_number_of_questions)).toFixed(0);
                     console.log (percentage_done);
                     $('.progress-bar').css('width', percentage_done + '%').attr('aria-valuenow', percentage_done).text(percentage_done + "% of questions answered");
-                }, 1000);
+                }, 5000);
 
                 $('#skip').click (function (){
                     if (question_number == total_number_of_questions - 1) {
