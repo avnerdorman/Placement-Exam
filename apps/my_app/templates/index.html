@@ -35,8 +35,8 @@ button {
 </div>
 
 
-<div class="progress bg-success" style="height: 40px;  font-weight: bold;">
-    <div class="progress-bar " role="progressbar" style="width: 0%;  padding-left: 10px;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0% of questions attempted</div>
+<div class="progress bg-success" style="height: 60px;  font-weight: bold; font-size: 16px;">
+    <div class="progress-bar " role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">&nbsp; You have attempted 0% of the questions on this assessment</div>
   </div>
 
 <p class = "text-right" style = "float: right; font-weight: bold">Time Started: <span id="datetime"></span></p>
@@ -45,6 +45,7 @@ button {
 <button type="button" class="btn btn-primary" id="first_unanswered" style="display:none">Skip to earliest unanswered question</button>
 
 <div class="container">
+
     <form id="friend-form">
         <div class="row">
             {% csrf_token %}
@@ -56,12 +57,23 @@ button {
             {% endfor %}
             
             <div class = "col text-center">
-                <input id="start-exam" type="submit" class="btn btn-primary" value="Start Exam" />
+                <input id="start-exam" type="submit" class="btn btn-primary" value="Start Assessment" />
             </div>
 
+        <div class="container-fluid col-8">
+            <ul class="list-group">
+                <li class="list-group-item intro-text h5">Thank you for taking this assessment.</li>
+                <li class="list-group-item intro-text h5">Please answer as many questions as you can, and try not to leave any questions blank.</li>
+                <li class="list-group-item intro-text h5">We recommend taking this assessment on Chrome or Safari on a personal computer.</li>
+                <li class="list-group-item intro-text h5">If you are using a mobile device, please turn it to landscape orientation.</li>
+                <li class="list-group-item intro-text h5">Do not consult any reference materials, and complete the assessment on your own.</li>
+                <li class="list-group-item intro-text h5">Please enter your first and last name, and click the "start assessment" button. </li>
+                <li class="list-group-item intro-text h5">You will have 40 minutes to complete the assessment.</li>
+                <li class="list-group-item intro-text h5">When you've finished, close the window or press the "complete the assessment" button.</li>
+
+            </ul>
+
         </div>
-
-
 <hr />
 <!-- Exam holds the current question shown to the students -->
 <div id = "exam" style="display:none"> 
@@ -469,7 +481,9 @@ const all_accidentals = ['b', '#', '']
                     $('#first_unanswered').show();
                 }
 
-                
+                if ($(".intro-text").length) {
+                    $('.intro-text').hide();
+                }
 
                 // console.log(exam[exam.length -1].start_date_time);
 
@@ -558,7 +572,7 @@ const all_accidentals = ['b', '#', '']
                     }
                     let percentage_done = (100*(total_answered_already/(total_number_of_questions - 1))).toFixed(0);
                     console.log (percentage_done);
-                    $('.progress-bar').css('width', percentage_done + '%').attr('aria-valuenow', percentage_done).text(percentage_done + "% of questions answered");
+                    $('.progress-bar').css('width', percentage_done + '%').attr('aria-valuenow', percentage_done).text("You have attempted " + percentage_done + "% of the questions on this assessment");
                 }, 1000);
 
                 
