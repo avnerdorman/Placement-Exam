@@ -63,23 +63,27 @@ button {
         <div class="container-fluid col-8">
             <ul class="list-group">
                 <li class="list-group-item intro-text h5">Thank you for taking this assessment.</li>
+
                 <li class="list-group-item intro-text h5">Please answer as many questions as you can, and try not to leave any questions blank.</li>
                 <li class="list-group-item intro-text h5">We recommend taking this assessment on Chrome, Safari, or Firefox on a personal computer.</li>
                 <li class="list-group-item intro-text h5">If you are using a mobile device, please turn it to landscape orientation.</li>
                 <li class="list-group-item intro-text h5">Do not consult any reference materials, and complete the assessment on your own.</li>
                 <li class="list-group-item intro-text h5">Please enter your first and last name, and click the "start assessment" button. </li>
                 <li class="list-group-item intro-text h5">You will have 40 minutes to complete the assessment.</li>
-                <li class="list-group-item intro-text h5">When you've finished, close the window or press the "complete the assessment" button.</li>
-
+                <li class="list-group-item intro-text h5">When you've finished, close the window or press the button to return to the Sunderman Conservatory home page.</li>
+                <li class="list-group-item intro-text h5 alert alert-warning" style="font-weight: bold;">This application is currently under development. Alternative text for music notation is not currently available to screen reader users. Please contact Dr. Amanda Heim at aheim@gettysburg.edu for assistance
+                </li>
+    
             </ul>
 
+        
         </div>
 <hr />
 <!-- Exam holds the current question shown to the students -->
 <div id = "exam" style="display:none"> 
     <div class="text-center" id = "question_container">
         <h3 id = "question_title">This will hold the question title</h3>
-        <div id = "question_prompt"> This will hold the question prompt</div>
+        <div class="alert alert-warning" style="font-weight: bold;" id = "question_prompt"> This will hold the question prompt</div>
         <div id = "question_number"></div>
         <div class="d-flex justify-content-center" id = "current_question"> This will hold the current question</div>
   
@@ -116,9 +120,10 @@ button {
         <p></p>
         <p><select id="question-number"></select></p>
         <button type="button" class="btn btn-primary" id="save-work" style="display:none">save your work</button>
-        <div type="button" class="btn btn-primary" id="submit-exam" onclick="complete()">Complete the assessment</button>
+        <div type="button" class="btn btn-primary" id="submit-exam" onclick="complete()">Close this window and return to the Sunderman Conservatory Home Page</button>
   
     </div>
+    <footer class="page-footer font-small blue pt-4 alert alert-warning" style="font-weight: bold;"></footer>
 </div>
 <form>
 </div>
@@ -485,6 +490,7 @@ const all_accidentals = ['b', '#', '']
                     $('.intro-text').hide();
                 }
 
+
                 // console.log(exam[exam.length -1].start_date_time);
 
                 let start_date_time = new Date();
@@ -571,7 +577,13 @@ const all_accidentals = ['b', '#', '']
                         }
                     }
                     let percentage_done = (100*(total_answered_already/(total_number_of_questions - 1))).toFixed(0);
-                    console.log (percentage_done);
+                    if (percentage_done == 100) {
+                        $('footer').html ('You have answered all the questions on the assessment. ');
+                    }
+                    else {
+                        $('footer').html ('You have answered ' + total_answered_already + ' out of ' + (total_number_of_questions-1) + ' total questions.');
+                    }
+
                     $('.progress-bar').css('width', percentage_done + '%').attr('aria-valuenow', percentage_done).html("&nbsp; You have attempted " + percentage_done + "% of the questions on this assessment");
                 }, 1000);
 
@@ -1059,7 +1071,7 @@ const all_accidentals = ['b', '#', '']
             
             var rounded_y = Math.ceil(y/5)*5;
 
-            var index = 20 - Math.abs(rounded_y - 50)/5;
+            var index = 19 - Math.abs(rounded_y - 50)/5;
             var pitch = pitches[index];
             exam[question.question_number].answer_pitch = pitch.slice(0,1);
             exam[question.question_number].answer_octave = pitch.slice(2,3);
