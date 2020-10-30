@@ -5,6 +5,7 @@ from .models import Friend
 
 
 class FriendAdmin(admin.ModelAdmin):
+    admin.site.disable_action('delete_selected')
     actions = ['download_csv']
     list_display = ('slate_id', 'first_name', 'last_name', 'grade', 'treble_grade', 'bass_grade', 'insert_barline_grade', 'major_keys', 'minor_keys')
 
