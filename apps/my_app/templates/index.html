@@ -788,7 +788,7 @@ const all_accidentals = ['b', '#', '']
             document.getElementById("question_prompt").innerHTML = question.question_type.slice(6) + " Clef: Write the note <strong>" + (question.given_pitch.toUpperCase() + question.given_accidental) + "</strong> by clicking <strong>in</strong> the staff";
         }
         else if (question.question_type == "Insert_Barlines") {
-            document.getElementById("question_prompt").innerHTML = "Add barlines to the following rhythm. Click on a note or rest to add a barline after it. Click again to remove the barline. <br> Make sure to add a barline at the end of each line.";
+            document.getElementById("question_prompt").innerHTML = "Add barlines to the following rhythm. Click on a note or rest to add a barline after it. Click again to remove the barline. <br> Make sure to add a barline at the end of the example.";
         }
 
         input.type = "text";
@@ -924,8 +924,8 @@ const all_accidentals = ['b', '#', '']
                     music = addBarLine(music, position + 1)
                     }
             }
-
-            return music.replace('\|\|', '').replace('\| \|', ''); /* remove doubles */replace
+            if (music[0] == '|') {music = music.substring (1)} /* do not allow students to add a barline before the music */
+            return music.replace('\|\|', '').replace('\| \|', ''); /* remove doubles */
         }
                 
         refresh.addEventListener("click", function (){
